@@ -1,0 +1,63 @@
+from telegram import Bot, InputMediaPhoto
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+from telegram import Update
+from telegram.ext import CallbackContext
+import os
+
+# توکن ربات
+TOKEN = "5394167749:AAEnAjEt24WvZtOCiaigWakWOKzy6cqM46o"
+# ایدی عددی ادمین
+ADMIN_ID = 1508813250
+
+# مسیر عکس قفل‌شده
+LOCKED_IMAGE_PATH = "locked_image.jpg"
+UNLOCKED_IMAGE_PATH = "unlocked_image.jpg"
+
+# تابع شروع ربات
+def start(update: Update, context: CallbackContext):
+    update.message.reply_text("سلام! برای مشاهده تصویر قفل‌شده استارز پرداخت کنید.")
+
+# تابع دریافت استارز و ارسال تصویر
+def handle_stars(update: Update, context: CallbackContext):
+    # گرفتن آیدی کاربر
+    user_id = update.message.from_user.id
+    
+    # اگر کاربر استارز پرداخت کرد
+    if update.message.sticker and update.message.sticker.set_name == "stars":
+        # بررسی اینکه آیا استارز کافی است
+        # اینجا شما می‌توانید چک کنید که تعداد استارز ارسالی چقدر است.
+        # اگر استارز کافی بود، عکس آزاد می‌شود
+        # فرض کنید حداقل 1 استارز کافی باشد
+        send_unlocked_image(update)
+
+def send_unlocked_image(update: Update):
+    # ارسال تصویر باز شده به کاربر
+    with open(UNLOCKED_IMAGE_PATH, 'rb') as image_file:
+        update.message.reply_photo(photo=image_file, caption="این هم تصویر آزاد شده!")
+
+# تابع برای ارسال عکس قفل‌شده به کاربر
+def send_locked_image(update: Update):
+    with open(LOCKED_IMAGE_PATH, 'rb') as image_file:
+        update.message.reply_photo(photo=image_file, caption="این تصویر قفل‌شده است. لطفا استارز پرداخت کنید.")
+
+# تابع مدیریت پیام‌ها
+def handle_message(update: Update, context: CallbackContext):
+    # اگر کاربر پیامی ارسال کرد، تصویر قفل‌شده را ارسال می‌کنیم
+    send_locked_image(update)
+
+# تابع اصلی
+def main():
+    # راه‌اندازی ربات
+    updater = Updater(TOKEN)
+    dispatcher = updater.dispatcher
+    
+    # دستورات ربات
+    dispatcher.add_handler(CommandHandler("start", start))
+    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_message))
+
+    # شروع ربات
+    updater.start_polling()
+    updater.idle()
+
+if __name__ == '__main__':
+    main()
